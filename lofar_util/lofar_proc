@@ -1,0 +1,116 @@
+#!/bin/bash
+
+#This was my attempt at making processing 1-step. Feel free to use this if you want to make something like that work.
+
+
+script=lofar_proc
+#Declare the number of mandatory args
+margs=3
+
+
+function example {
+    echo -e "example: ./$script -i file_name.zst -a fakeHeader -o ./path/to/output/directory"
+}
+
+function usage {
+    echo -e "usage: ./$script MANDATORY [OPTION]\n"
+}
+
+function help {
+  usage
+  echo -e "  -h,  --help              Prints this help message\n"
+  echo -e "MANDATORY:"
+  echo -e "  -i, --input_file 	   full path to input files, using %d as placeholder for lane number"
+  echo -e "  -a  --fakeHeader	   Text file containing metadata"
+  echo -e "OPTIONAL:"
+  echo -e "  -p, --packets_iter  	   The number of packets per iteration to supply to lofar_udp_guppi_raw, default=4096"
+  echo -e "  -e, --iter_file   	   The number of iterations per file to supply to lofar_udp_guppi_raw, default=1"
+  example
+}
+
+
+# Ensures that the number of passed args are at least equal to the declared number of mandatory args.
+# It also handles the special case of the -h or --help arg.
+function margs_precheck {
+	if [ $2 ] && [ $1 -lt $margs ]; then
+		if [ $2 == "--help" ] || [ $2 == "-h" ]; then
+			help
+			exit
+		else
+			echo 'Mandatory arguments missing, see ./'$script' -h'
+	    	usage
+			example
+	    	exit 1 # error
+		fi
+	fi
+}
+
+
+
+if [[ $# -eq 0 ]] ; then
+    echo 'No arguments have been supplied, exiting'
+	echo 'See ./'$script' -h'
+	usage
+	example
+    exit 1
+fi
+
+
+# Main
+margs_precheck $# $1
+
+input_file=
+header=
+packets_per_iteration=4096
+iterations_per_file=1
+
+
+# Args while-loop
+while [ "$1" != "" ];
+do
+   case $1 in
+   -i | --inputfile )     shift
+                          input_file=$1
+						  if [ -z "$input_file" ]
+						  then
+      					  	  echo "input_file is empty"
+							  exit 1
+						  else
+      	  				      continue
+					  	  fi
+                          ;;
+   -a | --fakeHeader )    shift
+   			  			  header=$1
+						  if [ -z "$header" ]
+						  then
+      					  	  echo "header is empty"
+							  exit 1
+						  else
+      	  				      continue
+					  	  fi
+			  	  		  ;;
+   -o | --out_dir )	  	  shift
+                          out_dir=$1
+                          ;;
+   -h | --help )          help
+                          exit
+                          ;;
+   *)
+                          echo "$script: illegal option $1"
+                          usage
+			  example
+		          exit 1 # error
+                          ;;
+    esac
+    shift
+done
+
+#take source name from header
+
+source_str = "$(grep 'src_name' $header)"
+source_name = $(echo $source_str | tr " " "\n")
+
+singularity exec /datax2/obs/singularity/lofar-upm_0.7.0-2021-03-25-9c91c04c3cc1.simg \\
+		bash -l -c "source /root/.bash_profile; lofar_udp_guppi_raw -i $input_file -o ../GUPPI/$source_name.%04d.raw -m $packets_per_iteration -e $iterations_per_file -a $header -b 0,411"
+
+rawspec -f 65536,8 -t 2,16 $source_name
