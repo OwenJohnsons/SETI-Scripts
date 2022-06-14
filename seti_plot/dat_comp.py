@@ -7,15 +7,16 @@ import argparse
 import re
 
 parser = argparse.ArgumentParser(description='Compares .dat files from turboSETI searches ')
-parser.add_argument("-i", "--inputfiles", nargs='+', help="paths to input .dat files, IE then SE")
+parser.add_argument("-i", "--inputfiles", nargs='+', help="paths to input .dat files. Irish station comes first then Swedish.")
 parser.add_argument("-s", "--snr_cutoff", help = "Maximum SNR threshold")
 args = parser.parse_args()
 ie_dat = args.inputfiles[0]
 se_dat = args.inputfiles[1]
 snr_thresh = args.snr_cutoff
 
-print(ie_dat)
-print(se_dat)
+print('Irish file path:', ie_dat, 'Shape:', np.shape(ie_dat))
+print('Swedish file path:', se_dat, 'Shape:', np.shape(se_dat))
+print('Inputted SNR threshold:', snr_thresh, 'Type:', type(snr_thresh))
 
 def read_dat(filename):
     r"""
