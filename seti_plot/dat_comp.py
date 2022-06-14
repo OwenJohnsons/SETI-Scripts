@@ -16,7 +16,7 @@ snr_thresh = args.snr_cutoff
 
 print('Irish file path:', ie_dat, 'Shape:', np.shape(ie_dat))
 print('Swedish file path:', se_dat, 'Shape:', np.shape(se_dat))
-print('Inputted SNR threshold:', snr_thresh, 'Type:', type(snr_thresh))
+print('Inputted SNR threshold:', np.array(snr_thresh), 'Type:', type(snr_thresh))
 
 def read_dat(filename):
     r"""
