@@ -52,7 +52,7 @@ def overlay_drift(f_event, f_start, f_stop, drift_rate, t_duration, offset='auto
 
 filename=sys.argv[1]+'.h5'
 dat_file=sys.argv[1]+'.dat'
-on_source_name='B2217+47'
+on_source_name=''
 
 df=read_dat(dat_file)
 low_freqs=df['FreqStart']
@@ -105,10 +105,9 @@ for i in range(len(low_freqs)):
 	# Get start and stop frequencies based on midpoint and bandwidth
 	f_start, f_stop = np.sort((f_mid - (bandwidth/2),  f_mid + (bandwidth/2)))
 
-
 	this_plot = fil.plot_waterfall(f_start=f_start, f_stop=f_stop)
 
-        # plot estimated drift line
+    # plot estimated drift line
 	overlay_drift(f_event, f_start, f_stop, drift_rate, t_duration, offset)
 
 	# Title the full plot
