@@ -1,22 +1,24 @@
+""" 
+CODE FUNCTION: To plot .h5 files into dynamic waterfall plots using I-LOFAR and LOFAR-SE data that is a product of the Breakthrough Listen pipelines. 
 
+Authors: Charles Giese, Owen Johnson
+Date last updated: 22/07/2022
+"""
 from blimpy import Waterfall
-from blimpy import dice
 import numpy as np
 import matplotlib.pyplot as plt
-import math as m
 import os
-import argparse
 from turbo_seti.find_event.find_event import read_dat
 from turbo_seti.find_event.plot_event import plot_waterfall
-from turbo_seti import plot_event
 from astropy.time import Time
 import matplotlib
 from blimpy.utils import rebin
 import sys
 
 fontsize=16
-font = {'family' : 'DejaVu Sans',
-'size' : fontsize}
+font = {'family' : 'serif', 'serif':'cmr10', 'size' : fontsize} 
+# font = {'family' : 'DejaVu Sans',
+# # 'size' : fontsize}
 MAX_IMSHOW_POINTS = (4096, 1268)
 
 
@@ -26,7 +28,6 @@ try:
 	os.mkdir('./hit_pngs')
 except:
         print('Could not create directory')
-
 
 
 def overlay_drift(f_event, f_start, f_stop, drift_rate, t_duration, offset='auto'):
@@ -52,7 +53,7 @@ def overlay_drift(f_event, f_start, f_stop, drift_rate, t_duration, offset='auto
 
 filename=sys.argv[1]+'.h5'
 dat_file=sys.argv[1]+'.dat'
-on_source_name=''
+on_source_name= filename.split('.')[0]
 
 df=read_dat(dat_file)
 low_freqs=df['FreqStart']
