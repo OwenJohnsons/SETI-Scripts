@@ -33,17 +33,18 @@ data_shape = waterfall.data.shape
 
 
 frame = stg.Frame(waterfall=waterfall)
-frame.add_constant_signal(f_start=frame.get_frequency(data_shape[2]/2),
-                          drift_rate=2*u.Hz/u.s,
-                          level=frame.get_intensity(snr=30),
-                          width=10*u.Hz,
+frame.add_constant_signal(f_start=frame.get_frequency(data_shape[2]/3),
+                          drift_rate=0.2*u.Hz/u.s,
+                          level=frame.get_intensity(snr=250),
+                          width=5*u.Hz,
                           f_profile_type='sinc2')
 
 fig = plt.figure(figsize=(10, 8), dpi = 300)
 frame.plot()
 
+# plt.title('TIC81831095, Injected (IE)', fontsize = 24)
 plt.xlabel('Frequency [Hz]'); plt.ylabel('Time [s]')
-plt.savefig('seti_gen.png')
+plt.savefig('seti_gen.png', bbox_inches='tight')
 plt.show()
 
 print('Injecting Done!')
