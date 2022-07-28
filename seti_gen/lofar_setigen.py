@@ -9,15 +9,41 @@ import setigen as stg
 import blimpy as bl
 import matplotlib.pyplot as plt
 
+plt.rc('font', family = 'serif', serif = 'cmr10') 
+plt.rcParams.update({'font.size': 22})
+
 data_path = '/datax2/owen/bary.corrected.fils/TIC81831095.bary.0000.fil'
-waterfall = bl.Waterfall(data_path, f_start = 145, f_stop = 155)
+waterfall = bl.Waterfall(data_path, f_start = 153.00025, f_stop = 153.00050)
+
+fig = plt.figure(figsize=(10, 8), dpi = 300)
+waterfall.plot_spectrum(logged=True)
+plt.savefig('raw_spectrum.png')
+plt.show()
+
+fig = plt.figure(figsize=(10, 8), dpi = 300)
+waterfall.plot_waterfall()
+plt.title('TIC81831095 (RAW)')
+
+plt.savefig('raw_waterfall.png')
+plt.show()
+
+print('Starting signal injection...')
+
+data_shape = waterfall.data.shape
+
+
 frame = stg.Frame(waterfall=waterfall)
-frame.add_constant_signal(f_start=frame.get_frequency(150),
+frame.add_constant_signal(f_start=frame.get_frequency(data_shape[2]/2),
                           drift_rate=2*u.Hz/u.s,
                           level=frame.get_intensity(snr=30),
-                          width=40*u.Hz,
+                          width=10*u.Hz,
                           f_profile_type='sinc2')
 
-fig = plt.figure(figsize=(10, 6))
+fig = plt.figure(figsize=(10, 8), dpi = 300)
 frame.plot()
+
+plt.xlabel('Frequency [Hz]'); plt.ylabel('Time [s]')
+plt.savefig('seti_gen.png')
 plt.show()
+
+print('Injecting Done!')
