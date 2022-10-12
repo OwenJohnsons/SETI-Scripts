@@ -9,16 +9,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 from turbo_seti.find_event.find_event import read_dat
-from turbo_seti.find_event.plot_event import plot_waterfall
+# from turbo_seti.find_event.plot_event import plot_waterfall
 from astropy.time import Time
 import matplotlib
 from blimpy.utils import rebin
 import sys
 
 fontsize=16
-font = {'family' : 'serif', 'serif':'cmr10', 'size' : fontsize} 
-# font = {'family' : 'DejaVu Sans',
-# # 'size' : fontsize}
+# font = {'family' : 'serif', 'serif':'cmr10', 'size' : fontsize} 
+font = {'family' : 'DejaVu Sans',
+'size' : fontsize}
 MAX_IMSHOW_POINTS = (4096, 1268)
 
 

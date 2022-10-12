@@ -1,7 +1,7 @@
 """
 Code Purpose: Slice filterbanks every 10 Mhz to make it more digestible to use in Breakthrough Listen analysis pipelines. 
 Author: Owen Johnson.
-Last Mejor Update: 03/08/2022
+Last Major Update: 03/08/2022
 """
 
 import numpy as np 

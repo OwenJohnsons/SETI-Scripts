@@ -1,0 +1,9 @@
+# -------------------------- o --------------------------
+# File ID: generated.h5 
+# -------------------------- o --------------------------
+# Source:TICObj 
+# MJD: 59410.327924168676	RA: 3h11m13.59s	DEC: 61d45m44.59s
+# DELTAT:   0.671089	DELTAF(Hz):   2.980232	max_drift_rate:   4.000000	obs_length: 899.929866
+# --------------------------
+# Top_Hit_# 	Drift_Rate 	SNR 	Uncorrected_Frequency 	Corrected_Frequency 	Index 	freq_start 	freq_end 	SEFD 	SEFD_freq 	Coarse_Channel_Number 	Full_number_of_hits 	
+# --------------------------
