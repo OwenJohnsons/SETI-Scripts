@@ -27,22 +27,23 @@ end = time.time()
 print('Time to load Gaia database: %s secs' % (end - start)) 
 print(gaia_df.head())
 
+# - Empty Dataframe to store targets in beam with Gaia headers -
+in_beam_targets_df = pd.DataFrame(columns = ['ra', 'decl', 'parallax', 'pmra', 'pmdec', 'phot_g_mean_mag', 'phot_bp_mean_mag', 'phot_rp_mean_mag', 'bp_rp', 'radial_velocity', 'radial_velocity_error', 'l', 'b', 'ecl_lon', 'ecl_lat', 'teff_val', 'a_g_val', 'e_bp_min_rp_val', 'radius_val', 'lum_val', 'datalink_url'], dtype = 'object')
+
 # - Looping over LOFAR beam pointings to find Gaia targets within the FWHM of the beam -
 
 in_beam_targets = np.array([])
 
 for i in tqdm(range(0, len(obs_trgts))):
     pointing = obs_trgts[i]
-    idx = 0 
-    for j in range(0, len(gaia_df)):
-        idx += 1 
-        gaia_trgt = SkyCoord(gaia_df['ra'][j], gaia_df['dec'][j], frame='fk5', unit=(u.hourangle, u.deg))
+    for idx,row in gaia_df.iterrows(): # Iterating each pointing over the gaia database
+        gaia_trgt = SkyCoord(row['ra'], row['decl'], frame='fk5', unit=(u.hourangle, u.deg))
         sep = pointing.separation(gaia_trgt)
 
         if sep < 2.59*u.deg: # FWHM of LOFAR beam from Van Haarlem et al. 2013
-            in_beam_targets = np.append(in_beam_targets, (gaia_df['ra'][j], gaia_df['dec'][j]))
-
+            in_beam_targets_df.append(row)
+ 
 # - Saving targets in beam to a text file -
-np.savetxt('in_beam_targets.txt', in_beam_targets, fmt='%s')
+in_beam_targets_df.to_csv('in_beam_targets.csv')
 
 gaia_df.visualize(filename='gaia_df_task_graph.pdf') 
