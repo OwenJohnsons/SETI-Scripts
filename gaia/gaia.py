@@ -36,7 +36,7 @@ in_beam_targets = np.array([])
 
 for i in tqdm(range(0, len(obs_trgts))):
     pointing = obs_trgts[i]
-    for idx,row in gaia_df.iterrows(): # Iterating each pointing over the gaia database
+    for idx,row in tqdm(gaia_df.iterrows(), leave = false): # Iterating each pointing over the gaia database
         gaia_trgt = SkyCoord(row['ra'], row['decl'], frame='fk5', unit=(u.hourangle, u.deg))
         sep = pointing.separation(gaia_trgt)
 
