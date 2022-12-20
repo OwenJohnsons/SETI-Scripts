@@ -10,6 +10,7 @@ import numpy as np
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 from tqdm import tqdm
+import pandas as pd 
 
 connection = sqlite3.connect('gaia_master_database.db')
 connection.row_factory = sqlite3.Row
@@ -39,7 +40,7 @@ obs_trgts = SkyCoord(pointings_ra, pointings_dec, frame='fk5', unit=(u.hourangle
 
 # --- Looping pointings through Gaia database --- 
 
-FWHM_tois = np.array([]) # Empty array to store TOIs in FWHM of LOFAR beam pointing
+FWHM_tois = [] # Empty array to store TOIs in FWHM of LOFAR beam pointing
 
 for i in tqdm(range(0, len(obs_trgts))): 
     pointing = obs_trgts[i]
@@ -51,7 +52,8 @@ for i in tqdm(range(0, len(obs_trgts))):
             print('Target found in beam pointing: %s' % pointing)
             print('Target found in database: %s' % sourceid_db[j][0])
             print('Separation: %s' % sep.degree)
-            FWHM_tois = np.append(FWHM_tois, (sourceid_db[j][0], sep.degree, gaia_trgt.ra.degree, gaia_trgt.dec.degree, pointing.ra.degree, pointing.dec.degree))
+            FWHM_tois.append((sourceid_db[j][0], sep.degree, gaia_trgt.ra.degree, gaia_trgt.dec.degree, pointing.ra.degree, pointing.dec.degree))
 
-# --- Saving TOIs to a text file ---
-np.savetxt('FWHM_tois.txt', FWHM_tois)
+# --- Saving TOIs to a dataframe ---
+FWHM_tois_df = pd.DataFrame(FWHM_tois, columns = ['Gaia Source ID', 'Separation (Deg)', 'Source RA (deg)', 'Source DEC (deg)', 'Pointing RA (deg)', 'Pointing DEC (deg)'])
+FWHM_tois_df.to_csv('FWHM_tois.csv', index = False)
