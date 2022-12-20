@@ -1,3 +1,2 @@
-# SETI-Scripts
-Scripts used for plotting data from the Breakthrough Listen data pipeline for respective radio telescopes. Scripts are orginally forked from Charlie Giese.
-Credit of intial script author can be found in each respective file. 
+# SETI Scripts
+Scripts used for SETI (Search For Extraterrestrial Intelligence) projects on respective data pipelines and clusters for the Breakthrough Listen project. Scripts are written from my time as a undergraduate research intern (May 21- Aug 22) and subsequent projects that I was involved in during my graduate research. Some scripts are forked from former Breakthrough Listen intern (2020) Charlie Giese. Credit of initial script author can be found in each respective file unless stated otherwise.  
