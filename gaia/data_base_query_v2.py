@@ -10,6 +10,9 @@ import numpy as np
 np.set_printoptions(suppress=True)
 from tqdm import tqdm
 import pandas as pd 
+import matplotlib.pyplot as plt
+# import scienceplots
+# plt.style.use(['science','ieee'])
 
 script_runtime_start = time.time()
 
@@ -26,7 +29,7 @@ names = row.keys()
 def query_column(column_name):
     start = time.time() # timing the query 
     cursor.execute('SELECT %s FROM data' % column_name) # actual query 
-    # cursor.execute("SELECT %s FROM data LIMIT 1000000" % column_name) # limits the query to 'n' entries; for testing purposes. 
+    # cursor.execute("SELECT %s FROM data LIMIT 100000" % column_name) # limits the query to 'n' entries; for testing purposes. 
     entries = cursor.fetchall()
     end = time.time()
     print('Time taken to fetch %s from database: %s secs.' % (column_name, "{:.1f}".format(end - start)))
@@ -50,13 +53,47 @@ def FWHM_seperation(points, beam_pointing, seperation_limit):
     return points[seperation <= seperation_limit]
 
 sep_limit = 2.59 # Taken as the beam FWHM from Van Haarlem et al. 2013
+total_targets = []; target_count = 0
 
-target_count = 0
 for pointing in tqdm(pointings_vec):
     in_beam_targets = FWHM_seperation(targets_vec, pointing, sep_limit)
-    target_count += len(in_beam_targets)
+    if len(in_beam_targets) != 0: 
+        total_targets.append(in_beam_targets) # - appending to a (2, n) array shape 
+        target_count += len(in_beam_targets)
+
+# --- Plotting the results ---
+
+fig, axes = plt.subplots(figsize=(8,10), dpi = 200)
+axes.set_aspect(1)
+
+for pointing in total_targets:
+    plt.scatter(pointing[:,0], pointing[:,1], s=0.1, c='k', alpha=0.001)
+
+for i in range(0, len(pointings_vec)):
+    circle120 = plt.Circle((pointings_vec[i]), 2.59, fill = False, lw = 0.15, color = 'green')
+    axes.add_artist(circle120)
+
+plt.scatter(pointings_ra, pointings_dec, s=0.2, c='r', label = 'Beam Pointings')
+plt.xlabel('RA (deg)'); plt.ylabel('DEC (deg)')
+plt.legend()
+plt.title('Gaia Targets within FWHM of LOFAR Beam Pointings')
+plt.savefig('gaia_targets_in_beam.png', dpi=300, bbox_inches='tight')
+
+# --- Printing results to terminal & exporting ---
 
 print('Number of Gaia targets found in beam: %s' % target_count)
 
+# --- Exporting the results to a text file ---
+
+total_targets = np.array(total_targets, dtype=object)
+
+flatten_array = []
+for i in range(0, len(total_targets)):
+    for j in range(0, len(total_targets[i])):
+        flatten_array.append(total_targets[i][j])
+
+flatten_array = np.array(flatten_array, dtype=object)
+np.savetxt('gaia_targets_in_beam_coords.txt', flatten_array, fmt='%s')
+
 script_runtime_end = time.time()
-print('Time taken for script to run %s secs.' % ("{:.1f}".format(script_runtime_start - script_runtime_end)))
+print('Time taken for script to run %s secs.' % ("{:.1f}".format(script_runtime_end - script_runtime_start)))
