@@ -4,18 +4,23 @@ Author: Owen A. Johnson
 Last Major Update: 09/01/2023
 '''
 
+import argparse
 import sqlite3
 import time 
 import numpy as np
-np.set_printoptions(suppress=True)
 from tqdm import tqdm
 import pandas as pd 
 import matplotlib.pyplot as plt
-# import scienceplots
-# plt.style.use(['science','ieee'])
 
 script_runtime_start = time.time()
 
+# --- Arguments --- 
+
+parser = argparse.ArgumentParser(description='Query the gaia database for targets in the FWHM of the LOFAR beam pointing.')
+parser.add_argument('-p', '--percentage', type=float, help='Percentage of LOFAR FWHM beam to be considered suitable for targets, default = 1.'); parser.set_defaults(percentage=1)
+percentage = parser.parse_args().percentage
+
+# --- Connecting to database ---
 connection = sqlite3.connect('gaia_master_database.db')
 connection.row_factory = sqlite3.Row
 cursor = connection.execute('select * from data') # --- fetching 'data' table from database ---
@@ -25,7 +30,6 @@ row = cursor.fetchone()
 names = row.keys()
 
 # --- fetching RA and DEC from the database ---
-
 def query_column(column_name):
     start = time.time() # timing the query 
     cursor.execute('SELECT %s FROM data' % column_name) # actual query 
@@ -52,7 +56,7 @@ def FWHM_seperation(points, beam_pointing, seperation_limit):
     seperation = np.linalg.norm(points - beam_pointing, axis=1)
     return points[seperation <= seperation_limit]
 
-sep_limit = 2.59 # Taken as the beam FWHM from Van Haarlem et al. 2013
+sep_limit = 1.295*percentage # Taken as the beam FWHM from Van Haarlem et al. 2013
 total_targets = []; target_count = 0
 
 for pointing in tqdm(pointings_vec):
@@ -93,7 +97,7 @@ for i in range(0, len(total_targets)):
         flatten_array.append(total_targets[i][j])
 
 flatten_array = np.array(flatten_array, dtype=object)
-np.savetxt('gaia_targets_in_beam_coords.txt', flatten_array, fmt='%s')
+np.savetxt(('gaia_targets_in_beam_coords_p%s.txt' % percentage), flatten_array, fmt='%s')
 
 script_runtime_end = time.time()
 print('Time taken for script to run %s secs.' % ("{:.1f}".format(script_runtime_end - script_runtime_start)))
