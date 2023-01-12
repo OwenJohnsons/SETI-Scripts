@@ -8,6 +8,7 @@ import argparse
 import sqlite3
 import numpy as np 
 import pandas as pd
+from tqdm import tqdm
 
 # --- Arguments ---
 parser = argparse.ArgumentParser(description='Intake a text file and query the gaia database for targets with matching co-ordinates and returing a .csv for the purposes of further analysis.')
