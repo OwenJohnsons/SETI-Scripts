@@ -33,7 +33,7 @@ names = row.keys()
 def query_column(column_name):
     start = time.time() # timing the query 
     cursor.execute('SELECT %s FROM data' % column_name) # actual query 
-    # cursor.execute("SELECT %s FROM data LIMIT 100000" % column_name) # limits the query to 'n' entries; for testing purposes. 
+    # cursor.execute("SELECT %s FROM data LIMIT 1000" % column_name) # limits the query to 'n' entries; for testing purposes. 
     entries = cursor.fetchall()
     end = time.time()
     print('Time taken to fetch %s from database: %s secs.' % (column_name, "{:.1f}".format(end - start)))
@@ -41,7 +41,7 @@ def query_column(column_name):
 
 ra_db = query_column('ra')
 dec_db = query_column('decl')
-# sourceid_db = query_column('source_id')
+sourceid_db = query_column('source_id')
 targets_vec = np.vstack((ra_db, dec_db)).T
 
 # --- Loading LOFAR beam pointings ---
@@ -54,15 +54,17 @@ def FWHM_seperation(points, beam_pointing, seperation_limit):
     points = np.array(points)
     beam_pointing = np.array(beam_pointing)
     seperation = np.linalg.norm(points - beam_pointing, axis=1)
-    return points[seperation <= seperation_limit]
+    db_indexes = np.where(seperation <= seperation_limit) # Where in the database the targets are found
+    return points[seperation <= seperation_limit], db_indexes
 
 sep_limit = 1.295*percentage # Taken as the beam FWHM from Van Haarlem et al. 2013
-total_targets = []; target_count = 0
+total_targets = []; total_indexes = []; target_count = 0
 
 for pointing in tqdm(pointings_vec):
-    in_beam_targets = FWHM_seperation(targets_vec, pointing, sep_limit)
+    in_beam_targets, idxes = FWHM_seperation(targets_vec, pointing, sep_limit)
     if len(in_beam_targets) != 0: 
         total_targets.append(in_beam_targets) # - appending to a (2, n) array shape 
+        total_indexes.append(idxes[0])
         target_count += len(in_beam_targets)
 
 # --- Plotting the results ---
@@ -83,21 +85,29 @@ plt.legend()
 plt.title('Gaia Targets within FWHM of LOFAR Beam Pointings')
 plt.savefig('gaia_targets_in_beam.png', dpi=300, bbox_inches='tight')
 
-# --- Printing results to terminal & exporting ---
-
-print('Number of Gaia targets found in beam: %s' % target_count)
-
 # --- Exporting the results to a text file ---
 
 total_targets = np.array(total_targets, dtype=object)
 
-flatten_array = []
-for i in range(0, len(total_targets)):
-    for j in range(0, len(total_targets[i])):
-        flatten_array.append(total_targets[i][j])
+def flatten_array(array):
+    flatten_array = []
+    for i in range(0, len(array)):
+        for j in range(0, len(array[i])):
+            flatten_array.append(array[i][j])
+    return flatten_array
 
-flatten_array = np.array(flatten_array, dtype=object)
-np.savetxt(('gaia_targets_in_beam_coords_p%s.txt' % percentage), flatten_array, fmt='%s')
+flatten_coords = flatten_array(total_targets); flatten_coords = np.array(flatten_coords, dtype=object)
+flatten_indexes = flatten_array(total_indexes); flatten_indexes = np.array(flatten_indexes, dtype=object)
+
+sourceid2write = []
+for idx in flatten_indexes:
+    sourceid2write.append(sourceid_db[idx]) 
+
+print('Number of targets found within a beam pointing: %s' % len(np.unique(flatten_indexes)))
+print('Number of targets that are duplicates due to beam pointing overlap: %s' % (len(flatten_indexes) - len(np.unique(flatten_indexes))))
+
+np.savetxt(('gaia_targets_in_beam_coords_p%s.txt' % percentage), flatten_coords, fmt='%s')
+np.savetxt(('gaia_targets_in_beam_indexes_p%s.txt' % percentage), sourceid2write, fmt='%s')
 
 script_runtime_end = time.time()
 print('Time taken for script to run %s secs.' % ("{:.1f}".format(script_runtime_end - script_runtime_start)))
