@@ -67,8 +67,8 @@ plt.legend(loc = 'upper left', frameon = True)
 plt.xlabel("EIRP (W/Hz)")
 plt.ylabel("Counts")
 
-plt.show()
 plt.savefig('EIRP_histogram_plot.pdf')
+plt.show()
 
 # --- Cummalative EIRP plot ---
 
@@ -84,5 +84,5 @@ ax.legend(loc = 'upper left', frameon = True)
 ax.set_title('Cumulative EIRP Distribution for Gaia Targets')
 ax.set_xlabel('EIRP (W/Hz)'); ax.set_ylabel('Cumulative Probability')
 
-plt.show()
 plt.savefig('EIRP_cummulative_plot.pdf')
+plt.show()
