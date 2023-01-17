@@ -39,13 +39,13 @@ def query_column(column_name):
     print('Time taken to fetch %s from database: %s secs.' % (column_name, "{:.1f}".format(end - start)))
     return np.array(entries).flatten()
 
-ra_db = query_column('ra')
-dec_db = query_column('decl')
+ra_db = query_column('ra'); dec_db = query_column('decl')
 sourceid_db = query_column('source_id')
 targets_vec = np.vstack((ra_db, dec_db)).T
 
 # --- Loading LOFAR beam pointings ---
-pointings_ra, pointings_dec = np.loadtxt('/datax/scratch/owenj/pointings-10122022.txt', unpack = True) # Unpacking LOFAR pointings in RA and DEC 
+OBS_df = pd.read_csv('/datax/scratch/owenj/SETI-Scripts/TESS/TESS_ext_target_data_observed.csv') # Loading observed targets
+pointings_ra = OBS_df['ra']; pointings_dec = OBS_df['dec']
 pointings_vec = np.vstack((pointings_ra, pointings_dec)).T
 
 # --- Finding targets in beam --- 
