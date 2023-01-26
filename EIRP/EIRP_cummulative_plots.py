@@ -13,13 +13,16 @@ plt.style.use(['science','ieee'])
 
 # --- .csv import --- 
 gaia_df = pd.read_csv('gaia_inbeam_table.csv')
-print(gaia_df.head())
 print('Amount of Gaia targets loaded:', len(gaia_df))
+
+TESS_df = pd.read_csv('TESS_ext_target_data_observed.csv')
+print('Amount of TESS targets loaded:', len(TESS_df))
 
 # --- .txt pointings import --- 
 
 pointings_ra, pointings_dec = np.loadtxt('pointings-10122022.txt', unpack = True)
-gaia_ra, gaia_dec = np.loadtxt('gaia_targets_in_beam_coords_p1.295.txt', unpack = True)
+# gaia_ra, gaia_dec = np.loadtxt('gaia_targets_in_beam_coords_p1.295.txt', unpack = True)
+gaia_ra = gaia_df['ra']; gaia_dec = gaia_df['decl']
 
 # --- Plotting --- 
 
@@ -53,11 +56,13 @@ EIRP_LR_radar = np.log10(pow(10,13)) # EIRP of a planetary radar
 EIRP_TV_broadcase = np.log10(pow(10,10)) # EIRP of a Aircraft radar
 
 narrowband_gaia = np.log10(obsEIRP(5, SEFD, gaia_df['dist_c'], obs_time, 3, 0.1))
+narrowband_TESS = np.log10(obsEIRP(5, SEFD, TESS_df['d'], obs_time, 3, 0.1)) 
 print(np.max(narrowband_gaia), np.min(narrowband_gaia))
 
 # --- EIRP Histogram Plot --- 
 plt.figure(figsize=(8,6), dpi = 200)
-plt.hist(narrowband_gaia, bins = 50, color = 'black', alpha = 0.5, label='Narrowband')
+plt.hist(narrowband_gaia, bins = 50, color = 'black', alpha = 0.5, label='Gaia')
+plt.hist(narrowband_TESS, bins = 50, color = 'blue', alpha = 0.5, label='TESS')
 
 plt.axvline(EIRP_IP_radar, label="K1-type", linestyle = '--', linewidth = 1)
 plt.axvline(EIRP_LR_radar, label="Planetary Radar", linestyle = '-.', linewidth = 1)
@@ -74,7 +79,8 @@ plt.show()
 
 fig, ax = plt.subplots(figsize=(8,6), dpi = 200)
 
-n, bins, patches = plt.hist(narrowband_gaia, bins = 1000, color = 'black', alpha = 0.5, histtype = 'stepfilled', density = True, cumulative = True, label = 'Narrowband')
+n, bins, patches = plt.hist(narrowband_gaia, bins = 1000, color = 'black', alpha = 0.5, histtype = 'stepfilled', density = True, cumulative = True, label = 'Gaia')
+n, bins, patches = plt.hist(narrowband_TESS, bins = 1000, color = 'blue', alpha = 0.5, histtype = 'stepfilled', density = True, cumulative = True, label = 'TESS')
 
 ax.axvline(EIRP_IP_radar, label="K1-type", linestyle = '--', linewidth = 1)
 ax.axvline(EIRP_LR_radar, label="Planetary Radar", linestyle = '-.', linewidth = 1)
@@ -86,3 +92,16 @@ ax.set_xlabel('EIRP (W/Hz)'); ax.set_ylabel('Cumulative Probability')
 
 plt.savefig('EIRP_cummulative_plot.pdf')
 plt.show()
+
+# --- Distance Normalized Histogram Plot ---
+
+plt.figure(figsize=(8,6), dpi = 200)
+plt.hist(gaia_df['dist_c'], bins = 50, color = 'black', alpha = 0.5, label='Gaia', density = True)
+plt.hist(TESS_df['d'], bins = 10, color = 'blue', alpha = 0.5, label='TESS', density = True)
+
+plt.axvline(gaia_df['dist_c'].mean(), label = 'Gaia Mean Distance: %s pc' % '{:.1f}'.format(gaia_df['dist_c'].mean()), linestyle = '--', linewidth = 1)
+plt.axvline(TESS_df['d'].mean(), label = 'Tess Mean Distance: %s pc' % '{:.1f}'.format(TESS_df['d'].mean()), linestyle = '-.', linewidth = 1)
+
+plt.xlabel('Distance (pc)')
+# plt.ylabel('')
+plt.legend()
