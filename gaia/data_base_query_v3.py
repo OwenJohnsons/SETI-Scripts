@@ -58,6 +58,7 @@ sources = sourceid_db[in_beam_targets[0]]
 print('\n---\nNumber of unique targets found in beam: %s' % len(np.unique(sources)))
 print('Number of targets that are seen in multiple beams: %s' % (len(sources) - len(np.unique(sources))))
 print('Average distance between targets and pointings: %s deg' % np.round(np.mean(in_beam_targets[2].degree), 3))
+print('Median distance between targets and pointings: %s deg' % np.round(np.median(in_beam_targets[2].degree), 3))
 print('Max distance between target and a pointing: %s deg' % np.round(np.max(in_beam_targets[2].degree), 3))
 print('Pointing with the most Gaia targets around it: %s \n---\n ' % np.argmax(np.bincount(in_beam_targets[1])))
 
