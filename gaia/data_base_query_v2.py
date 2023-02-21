@@ -11,6 +11,8 @@ import numpy as np
 from tqdm import tqdm
 import pandas as pd 
 import matplotlib.pyplot as plt
+from astropy import units as u
+from astropy.coordinates import SkyCoord
 
 script_runtime_start = time.time()
 
@@ -18,6 +20,7 @@ script_runtime_start = time.time()
 
 parser = argparse.ArgumentParser(description='Query the gaia database for targets in the FWHM of the LOFAR beam pointing.')
 parser.add_argument('-p', '--percentage', type=float, help='Percentage of LOFAR FWHM beam to be considered suitable for targets, default = 1.'); parser.set_defaults(percentage=1)
+parser.add_argument('-s', '--sanity_check', type=bool, help='Run a sanity check on the code, default = False.'); parser.set_defaults(sanity_check=False)
 percentage = parser.parse_args().percentage
 
 # --- Connecting to database ---
@@ -32,20 +35,20 @@ names = row.keys()
 # --- fetching RA and DEC from the database ---
 def query_column(column_name):
     start = time.time() # timing the query 
-    cursor.execute('SELECT %s FROM data' % column_name) # actual query 
-    # cursor.execute("SELECT %s FROM data LIMIT 1000" % column_name) # limits the query to 'n' entries; for testing purposes. 
+    # cursor.execute('SELECT %s FROM data' % column_name) # actual query
+    cursor.execute("SELECT %s FROM data LIMIT 1000000" % column_name) # limits the query to 'n' entries; for testing purposes. 
     entries = cursor.fetchall()
     end = time.time()
     print('Time taken to fetch %s from database: %s secs.' % (column_name, "{:.1f}".format(end - start)))
     return np.array(entries).flatten()
 
-ra_db = query_column('ra')
-dec_db = query_column('decl')
+ra_db = query_column('ra'); dec_db = query_column('decl')
 sourceid_db = query_column('source_id')
 targets_vec = np.vstack((ra_db, dec_db)).T
 
 # --- Loading LOFAR beam pointings ---
-pointings_ra, pointings_dec = np.loadtxt('/datax/scratch/owenj/pointings-10122022.txt', unpack = True) # Unpacking LOFAR pointings in RA and DEC 
+OBS_df = pd.read_csv('/datax/scratch/owenj/SETI-Scripts/TESS/TESS_ext_target_data_observed.csv') # Loading observed targets
+pointings_ra = OBS_df['ra']; pointings_dec = OBS_df['dec']
 pointings_vec = np.vstack((pointings_ra, pointings_dec)).T
 
 # --- Finding targets in beam --- 
@@ -55,25 +58,50 @@ def FWHM_seperation(points, beam_pointing, seperation_limit):
     beam_pointing = np.array(beam_pointing)
     seperation = np.linalg.norm(points - beam_pointing, axis=1)
     db_indexes = np.where(seperation <= seperation_limit) # Where in the database the targets are found
-    return points[seperation <= seperation_limit], db_indexes
+    return (points[seperation <= seperation_limit]), db_indexes
 
-sep_limit = 1.295*percentage # Taken as the beam FWHM from Van Haarlem et al. 2013
-total_targets = []; total_indexes = []; target_count = 0
+sep_limit = 1.295 # *percentage # Taken as the beam FWHM from Van Haarlem et al. 2013
+total_targets = []; total_indexes = []
 
 for pointing in tqdm(pointings_vec):
     in_beam_targets, idxes = FWHM_seperation(targets_vec, pointing, sep_limit)
     if len(in_beam_targets) != 0: 
         total_targets.append(in_beam_targets) # - appending to a (2, n) array shape 
         total_indexes.append(idxes[0])
-        target_count += len(in_beam_targets)
+
+target_count = 0 
+for target in total_targets:
+    target_count += len(target[0])
+
+
+# --- Sanity check ---
+counter = 0 
+if parser.parse_args().sanity_check == True:
+    for pointing in pointings_vec:    
+        pointing_coord = SkyCoord(ra=pointing[0]*u.degree, dec=pointing[1]*u.degree)
+        for target in total_targets:
+            target_coord = SkyCoord(ra=target[0][0]*u.degree, dec=target[0][1]*u.degree)
+            sep = pointing_coord.separation(target_coord)
+            if sep.degree <= sep_limit:
+                counter += 1
+                # print(target_coord, pointing_coord, sep.degree, sep_limit)                
+                plt.scatter(target_coord.ra.degree, target_coord.dec.degree, s=0.1, c='k')
+                plt.scatter(pointing_coord.ra.degree, pointing_coord.dec.degree, s=0.1, c='r')
+    plt.show()
+    plt.savefig('sanity_check.png', dpi=300, bbox_inches='tight')
+
+if counter == target_count:
+    print('Sanity check passed.')
+else:
+    print('Sanity check failed.\nNumber of targets that pass the check: %s' % counter)
+    
 
 # --- Plotting the results ---
-
 fig, axes = plt.subplots(figsize=(8,10), dpi = 200)
-axes.set_aspect(1)
+# axes.set_aspect(1)
 
-for pointing in total_targets:
-    plt.scatter(pointing[:,0], pointing[:,1], s=0.1, c='k', alpha=0.001)
+for trgts in total_targets:
+    axes.scatter(trgts[:,0], trgts[:,1], s=0.1, c='k', alpha=0.001)
 
 for i in range(0, len(pointings_vec)):
     circle120 = plt.Circle((pointings_vec[i]), 2.59, fill = False, lw = 0.15, color = 'green')
@@ -103,7 +131,8 @@ sourceid2write = []
 for idx in flatten_indexes:
     sourceid2write.append(sourceid_db[idx]) 
 
-print('Number of targets found within a beam pointing: %s' % len(np.unique(flatten_indexes)))
+# print('Number of targets found within a beam pointing: %s' % len(np.unique(flatten_indexes)))
+print('Number of targets found within a beam pointing: %s' % target_count)
 print('Number of targets that are duplicates due to beam pointing overlap: %s' % (len(flatten_indexes) - len(np.unique(flatten_indexes))))
 
 np.savetxt(('gaia_targets_in_beam_coords_p%s.txt' % percentage), flatten_coords, fmt='%s')
