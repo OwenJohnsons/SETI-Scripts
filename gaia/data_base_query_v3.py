@@ -10,6 +10,12 @@ from astropy.coordinates import SkyCoord
 
 script_runtime_start = time.time()
 
+# --- Command Line Arguments --- 
+parser = argparse.ArgumentParser(description='Finds the number of Gaia sources in the LOFAR beam pointings.')
+parser.add_argument('--Quantity', '-q', help='Path to the Gaia database.', default = False)
+args = parser.parse_args()
+cond = args.Quantity
+
 # --- Connecting to database ---
 connection = sqlite3.connect('gaia_master_database.db')
 connection.row_factory = sqlite3.Row
@@ -88,6 +94,18 @@ for i in range(0, len(sources)):
 np.savetxt('txt/gaia_ids.txt', np.unique(sources), fmt='%s')
 gaia_df = pd.DataFrame({'source_id': sources, 'ra': plot_targets.ra.degree, 'dec': plot_targets.dec.degree, 'seperation': in_beam_targets[2].degree, 'beam': in_beam_targets[1] , 'beam_ra': beam_ra, 'beam_dec': beam_dec})
 gaia_df.to_csv('csv/gaia_query.csv', index=False)
+
+if cond == True: 
+    sep_values = np.linspace(0, 1.5, 10)*1.295
+    quantity_values = []
+    for sep in sep_values:
+        in_beam_targets = pointing_coords.search_around_sky(target_coords, sep*u.degree)
+        sources = sourceid_db[in_beam_targets[0]]
+        quantity_values.append(len(np.unique(sources)))
+
+    # -- Saving to .csv --- 
+    quantity_df = pd.DataFrame({'seperation': sep_values, 'quantity': quantity_values})
+    quantity_df.to_csv('csv/gaia_query_quantity.csv', index=False)
 
 script_runtime_end = time.time()
 print('Time taken for script to run %s secs.' % ("{:.1f}".format(script_runtime_end - script_runtime_start)))
