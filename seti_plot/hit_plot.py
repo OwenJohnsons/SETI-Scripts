@@ -1,6 +1,5 @@
 """ 
 CODE FUNCTION: To plot .h5 files into dynamic waterfall plots using I-LOFAR and LOFAR-SE data that is a product of the Breakthrough Listen pipelines. 
-
 Authors: Charles Giese, Owen Johnson
 Date last updated: 22/07/2022
 """
@@ -16,9 +15,9 @@ from blimpy.utils import rebin
 import sys
 
 fontsize=16
-# font = {'family' : 'serif', 'serif':'cmr10', 'size' : fontsize} 
-font = {'family' : 'DejaVu Sans',
-'size' : fontsize}
+font = {'family' : 'serif', 'serif':'cmr10', 'size' : fontsize} 
+# font = {'family' : 'DejaVu Sans',
+# 'size' : fontsize}
 MAX_IMSHOW_POINTS = (4096, 1268)
 
 
