@@ -44,4 +44,21 @@ def obsEIRPtrans(SNR, SEFD, distance):
 def EIRP_appending(empty_array, SNR, SEFD, distance, Obslen, chbw, dc):
     empty_array.append(np.log10(obsEIRP(SNR, SEFD, distance, Obslen, chbw, dc)))
     return empty_array
+
+def calc_SEFD(A, Tsys, eff=1.0):
+    """ Calculate SEFD
+    Tsys = system temperature
+    A = collecting area
+    Ae = effective collecting area
+    eff = aperture efficency (0.0 to 1.0)
+    """
+    kb = 1.3806488e3  # 1.38064852e-23    Boltzmann constant
+    Ae = A*eff
+    return 2 * Tsys * kb / Ae
+
+def calc_DishArea(d):
+    """ Compute dish area
+    d = dish diameter
+    """
+    return np.pi * (d/2)**2
     
