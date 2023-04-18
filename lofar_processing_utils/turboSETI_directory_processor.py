@@ -11,13 +11,11 @@ import glob
 from tqdm import tqdm 
 from turbo_seti.find_doppler.find_doppler import FindDoppler
 from datetime import datetime
-from email_operator.py import email_users
 import numpy as np 
-
 
 # - Command line arguments - 
 parser = argparse.ArgumentParser(description='Processes LOFAR filterbanks through turboSETI.')
-parser.add_argument('-i', '--path',  help="path to input .fil files.", required=True)
+parser.add_argument('-p', '--path',  help="path to input .fil files.", required=True)
 args = parser.parse_args()
 
 input_data_directory = args.path 
@@ -26,8 +24,9 @@ input_data_directory = args.path
 try:
     processed_trgts = np.loadtxt(args.processed_trgts, dtype='str')
 except: # create a text file to store the processed targets
-    processed_trgts = open('processed_targets.txt', "w+")
+    processed_trgts = open(input_data_directory + '/processed_targets.txt', "w+")
     processed_trgts.close()
+    processed_trgts = []
 
 # - Create a directory to store the turboSETI output files -
 try:
@@ -37,6 +36,7 @@ except:
 
 output_data_directory = input_data_directory + '/TS_output'
 fil_list = glob.glob(input_data_directory + '/TIC*.fil')
+print('Number of files to process: ', len(fil_list), '\n')
 
 for file in tqdm(fil_list):
     if file not in processed_trgts:
@@ -50,7 +50,7 @@ for file in tqdm(fil_list):
                             )
             doppler.search()
             fil_list.append(file)
-            np.savetxt('processed_targets.txt', fil_list,  fmt="%s")
+            np.savetxt(input_data_directory + '/processed_targets.txt', fil_list,  fmt="%s")
 
         except: 
             print('Turbo search file failed on this target... moving to next file')
@@ -62,4 +62,3 @@ for file in tqdm(fil_list):
         print('Critical Error, check .log')
     
 print('\n Job Finished')
-email_users()
